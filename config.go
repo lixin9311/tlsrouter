@@ -35,9 +35,11 @@ type Route struct {
 
 // Config stores the TLS routing configuration.
 type Config struct {
-	mu     sync.Mutex
-	routes []Route
-	acme   *ACME
+	mu           sync.Mutex
+	routes       []Route
+	defaultRoute string
+	defaultProxy bool
+	acme         *ACME
 }
 
 func compile(hostname string, match *regexp.Regexp, backend string) string {
@@ -85,7 +87,7 @@ func (c *Config) Match(hostname string) (string, bool) {
 			return r.backend, r.proxyInfo
 		}
 	}
-	return "", false
+	return c.defaultRoute, c.defaultProxy
 }
 
 // Read replaces the current Config with one read from r.
@@ -107,6 +109,11 @@ func (c *Config) Read(r io.Reader) error {
 		case 1:
 			return fmt.Errorf("invalid %q on a line by itself", s.Text())
 		case 2:
+			if fs[0] == "default" {
+				c.defaultRoute = fs[1]
+				c.defaultProxy = false
+				break
+			}
 			re, err := dnsRegex(fs[0])
 			if err != nil {
 				return err
@@ -114,6 +121,11 @@ func (c *Config) Read(r io.Reader) error {
 			routes = append(routes, Route{re, fs[1], false})
 			backends = append(backends, fs[1])
 		case 3:
+			if fs[0] == "default" {
+				c.defaultRoute = fs[1]
+				c.defaultProxy = true
+				break
+			}
 			re, err := dnsRegex(fs[0])
 			if err != nil {
 				return err
