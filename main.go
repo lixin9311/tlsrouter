@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	cfgFile      = flag.String("conf", "/etc/tlsrouter.conf", "configuration file")
+	cfgFile      = flag.String("conf", "/etc/tlsrouter/tlsrouter.conf", "configuration file")
 	listen       = flag.String("listen", ":443", "listening port")
 	helloTimeout = flag.Duration("hello-timeout", 3*time.Second, "how long to wait for the TLS ClientHello")
 )
